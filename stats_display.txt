@@ -1,0 +1,87 @@
+//————STATS + DISPLAY————
+var loopCount = 0
+var prevTime = 0
+var curTime = 0
+var maxFoe = 0
+?loc.loop
+  loopCount++
+  prevTime = curTime
+curTime = totaltime
+?foe.count > maxFoe
+  maxFoe = foe.count
+
+>`0,7,#rainFF,@loc.name@ - @loc.stars@*
+>`0,8,#green,LOOP @loopCount@— @totalTime/30@s (@prevTime/30@s) @screen.i@ 
+>`0,9,#green,BEST:@loc.bestTime/30@s AVG:@loc.averageTime/30@s
+
+>`0,10,#yellow,FOE— dmg:@foe.damage@ cnt:@foe.count@/@maxFoe@
+>`0,11,#yellow,D:@foe.distance@ S:@foe.state@ T:@foe.time@
+
+var bossAT = 0
+var bossAC = 0
+var bossTemp = 0
+var dmgTaken = 0
+var prevHP = 0
+var totalHits = 0
+?foe = boss
+  >`0,12,#blue,BOSS— 
+  >`0,13,#blue,32:@bossAT@ 33:@bossAC/30@s >>@totalHits@ (-@dmgTaken@)
+  >`0,15,#blue,@foe.debuffs.string@
+  ?foe = phase1
+    >`6,12,#magenta,PHASE1
+  ?foe = phase2
+    >`6,12,#magenta,PHASE2
+  ?foe = phase3
+    >`6,12,#magenta,PHASE3
+  ?foe = poison
+    >`6,19,#cyan,ICE
+  ?foe = ice
+    >`6,19,#red,FIRE
+  ?foe = fire
+    >`6,19,#yellow,AETHER
+  ?foe = aether
+    >`6,19,#green,VIGOR
+  ?foe = vigor
+    >`6,19,#blue,POISON
+
+  ?foe.state = 32
+    ?foe.time = 0
+      bossAT = 0
+    :
+      bossAT ++
+  ?foe.state = 33 & foe.time = 0
+    bossAC = bossTemp
+    bossTemp = 0
+  :
+    bossTemp++
+
+  ?hp < prevHP
+    dmgTaken = prevHP - hp
+    totalHits++
+  prevHP = hp
+:
+  dmgTaken = 0
+  totalHits = 0
+
+>`0,24,#green,@buffs.string@
+>`0,25,#red,@debuffs.string@
+
+var dmgDps = 0
+var tDps = 0
+var fPrvHp = 0
+var tsDps = 0
+?1=1
+  ?1=1//loc = rocky //& loc.stars = 6
+    >`0,21,#rainFF,———DPS
+    >`0,22,GP:@totalGP@, DPS:@(dmgDps*30)/tDps@
+    >`0,23,IDLE: @ai.idle@
+    ?(foe.hp+foe.armor) < fPrvHp
+      tsDps = 1
+      dmgDps = dmgDps + (fPrvHp - (foe.hp + foe.armor))
+    ?tsDps
+      tDps++
+    fPrvHp = foe.hp+foe.armor
+    ?ai.enabled = false
+      tsDps = 0
+      tDps = 0
+      dmgDps = 0
